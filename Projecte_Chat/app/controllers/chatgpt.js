@@ -1,6 +1,8 @@
+require('dotenv').config();
+
 // Importamos la función askChatGPT del controlador
 const { OpenAI } = require('openai');
-const openaiClient = new OpenAI({ apiKey: '' });
+const openaiClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 let chatHistory = []; // Array para almacenar el historial de mensajes
 
