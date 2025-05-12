@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/<%=customCss%>">
+    <script type="text/javascript" src="/js/jquery-3.6.0.min.js"></script>
+
+    <script>
+      function redirectToCreate() {
+        window.location.href = '/create';
+      }
+    </script>
+
+  </head>
+  <body>
+    <nav>
+      <a href="/chat/list">Chat</a>
+      <a href="/chat/history">Historial</a>
+      <a href="/chat/logout" class="logout">Log Out</a>
+    </nav>

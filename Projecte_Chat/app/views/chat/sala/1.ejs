@@ -1,0 +1,173 @@
+<%- include('../../header', { pageTitle: 'Sala ' + sala , customCss: 'salas.css' }) %>
+
+<div class="container-sala">
+    <h1>Sala Chat <%= sala %></h1>
+    <div id="chat-container">
+        <div id="chat-and-user-list">
+            <div id="chat-messages">
+                <div id="messages-container">
+                    <!-- Iterar sobre los mensajes y mostrarlos aquí -->
+                </div>
+            </div>
+
+            <div id="user-list">
+                <h5>Usuarios Conectados</h5>
+                <ul>
+                    <!-- Los usuarios conectados (username) se mostrarán aquí -->
+                </ul>
+            </div>
+        </div>
+
+        <form id="message-form">
+            <input type="text" id="message" name="message" placeholder="Escribe tu mensaje aquí:" />
+            <button type="submit">Enviar</button>
+            <div>
+                <input type="checkbox" id="chatgpt" name="chatgpt">
+                <label for="chatgpt">ChatGPT</label>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.socket.io/4.1.2/socket.io.min.js"></script>
+<script>
+    // Función para hacer scroll al final del contenedor de mensajes
+    function scrollToBottom() {
+        var messagesContainer = document.getElementById("messages-container");
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Función para mostrar el mensaje en el div de mensajes
+    function displayMessage(sender, message) {
+        const messagesContainer = document.getElementById("messages-container");
+
+        // Crear elemento para el mensaje
+        const messageElement = document.createElement("div");
+        messageElement.classList.add("message");
+
+        // Determinar el color del texto según el remitente
+        let textColor = "";
+        if (sender === "<%= usuario %>") {
+            textColor = "blue"; // Mensaje del usuario
+        } else {
+            textColor = "green"; // Mensaje de otro usuario
+        }
+
+        // Agregar contenido al elemento del mensaje
+        const content = `<strong style="color: ${textColor}">${sender}: </strong>${message}`;
+        messageElement.innerHTML = content;
+
+        // Agregar el mensaje al contenedor de mensajes
+        messagesContainer.appendChild(messageElement);
+
+        // Hacer scroll al final del contenedor para mostrar el último mensaje
+        scrollToBottom();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        scrollToBottom(); // Llamar a la función cuando se cargue la página
+
+        const socket = io();
+
+        // Emitir evento para unirse a la sala actual
+        socket.emit("joinRoom", "<%= sala %>", "<%= usuario %>");
+        socket.on("updateUserList", (users) => {
+            const userListContainer = document.getElementById("user-list");
+            userListContainer.innerHTML = "<h5>Usuarios Conectados</h5><ul>";
+
+            users.forEach((user) => {
+                userListContainer.innerHTML += `<li>${user}</li>`;
+            });
+
+            userListContainer.innerHTML += "</ul>";
+        });
+
+        // Mantener un historial de solicitudes del usuario
+        let requestHistory = [];
+
+        // Manejar la recepción de mensajes
+        socket.on("message", (message) => {
+            console.log("Mensaje recibido:", message);
+            // Agregar el mensaje recibido al historial
+            requestHistory.push({ sender: message.sender, text: message.text });
+            // Llamar a la función para manejar la respuesta
+            handleResponse(message.sender, message.text);
+        });
+
+        // Función para manejar la respuesta basada en el contexto
+        async function handleResponse(sender, text) {
+            // Verificar si el último mensaje fue del usuario
+            if (sender !== "ChatGPT") {
+                // Obtener el mensaje más reciente del usuario
+                const userMessage = requestHistory[requestHistory.length - 1].text;
+                // Verificar si el usuario ha hecho una solicitud previa
+                if (userMessage) {
+                    // Enviar la solicitud al servidor para obtener una respuesta
+                    try {
+                        const response = await fetch('/chat/askChatGPT', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ message: userMessage })
+                        });
+                        const data = await response.json();
+                        // Mostrar el mensaje del usuario
+                        displayMessage(sender, text);
+                        // Mostrar la respuesta de ChatGPT
+                        displayMessage("ChatGPT", data.response);
+                    } catch (error) {
+                        console.error('Error al preguntar a ChatGPT:', error);
+                    }
+                }
+            } else {
+                // Si el mensaje recibido fue del ChatGPT, simplemente mostrarlo
+                displayMessage(sender, text);
+            }
+        }
+
+        // Variable para controlar el estado del envío de mensajes
+        let isSendingMessage = false;
+
+        // Manejar el envío de mensajes desde el formulario
+        const messageForm = document.getElementById("message-form");
+        messageForm.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            // Verificar si ya se está enviando un mensaje
+            if (isSendingMessage) {
+                return; // Si ya se está enviando un mensaje, salir de la función
+            }
+
+            // Marcar que se está enviando un mensaje
+            isSendingMessage = true;
+
+            const messageInput = document.getElementById("message");
+            const messageText = messageInput.value;
+            const username = "<%= usuario %>";
+            const askGPT = document.getElementById("chatgpt").checked;
+
+            // Agregar el mensaje del usuario al historial
+            requestHistory.push({ sender: username, text: messageText });
+
+            if (askGPT) {
+                // Si el usuario quiere preguntar a ChatGPT, llamar a la función para manejar la respuesta
+                handleResponse(username, messageText);
+            } else {
+                // Si el usuario no quiere preguntar a ChatGPT, simplemente mostrar el mensaje del usuario
+                displayMessage(username, messageText);
+                // Marcar que se ha completado el envío del mensaje
+                isSendingMessage = false;
+            }
+
+            // Limpiar el campo de entrada después de enviar el mensaje
+            messageInput.value = "";
+
+            // Restablecer el estado del envío de mensajes
+            isSendingMessage = false;
+        });
+    });
+
+</script>
+
+<%- include('../../footer') %>

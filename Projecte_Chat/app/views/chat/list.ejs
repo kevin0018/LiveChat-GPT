@@ -1,0 +1,14 @@
+<%- include('../header', { pageTitle: 'Chat List', customCss: 'list.css' }) %>
+
+<div class="container">
+  <h1>Selecciona la sala de chat</h1>
+  <form action="/chat/enter" method="post">
+    <input type="radio" name="sala" value="1"> <label for="sala1">Sala 1</label><br><br>
+    <input type="radio" name="sala" value="2"> <label for="sala2">Sala 2</label><br><br>
+    <input type="radio" name="sala" value="3"> <label for="sala3">Sala 3</label><br><br>
+    <input type="radio" name="sala" value="4"> <label for="sala4">Sala 4</label><br><br>
+    <button type="submit">Entrar</button>
+  </form>
+</div>
+
+<%- include('../footer') %>

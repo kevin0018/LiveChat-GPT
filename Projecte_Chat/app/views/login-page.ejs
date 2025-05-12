@@ -1,0 +1,22 @@
+<%- include('header', { pageTitle: 'Login Page', customCss: 'style.css'}) %>
+
+<div class="container">
+  <h1>Node Chat</h1>
+  <% if (usuarioNoExiste) { %>
+    <div class="alert alert-danger" role="alert">
+        Usuario o contraseña inválidos.
+    </div>
+  <% } %>
+
+  <form id="loginForm" action="/verificarUsuario" method="post">
+    <label for="user">Username</label><br>
+    <input type="text" name="user" placeholder="Username"> <br>
+    <label for="pass">Password</label><br>
+    <input type="password" name="pass" placeholder="Password">
+    <br>
+    <button type="button" onclick="redirectToCreate()">Register</button>
+    <button type="submit">Login</button>
+  </form>
+</div>
+
+<%- include('footer') %>
