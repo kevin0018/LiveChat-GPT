@@ -1,6 +1,6 @@
 # LiveChat-GPT
 
-Proyecto de chat en tiempo real realizado con Node.js, Express, Socket.io, MongoDB y Docker, CSS.
+Proyecto de chat en tiempo real realizado con Node.js, Express, Socket.io, MongoDB, Docker y CSS.
 
 ## Tecnologías utilizadas
 
